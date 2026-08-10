@@ -1,29 +1,26 @@
-# @ecarrizo/access-control
+# WardenAuthz TypeScript SDK
 
-TypeScript SDK for the [WardenAuth](https://wardenauthz.com) WardenAuth API.
-
-Fine-grained, multi-tenant role-based access control for serverless SaaS — 80× cheaper than Auth0 FGA.
+Official TypeScript/JavaScript client for [WardenAuthz](https://wardenauthz.com) — fine-grained, multi-tenant role-based access control for serverless SaaS.
 
 ## Installation
 
 ```bash
-npm install @ecarrizo/access-control
+npm install @ecarrizo2/wardenauthz-js
 ```
 
 ## Quick Start
 
 ```typescript
-import { WardenAuthClient } from '@ecarrizo/access-control'
+import { WardenAuthClient } from '@ecarrizo2/wardenauthz-js'
 
 const rbac = new WardenAuthClient({
   apiUrl: 'https://api.wardenauthz.com',
-  apiKey: process.env.ACCESS_CONTROL_API_KEY!,
+  apiKey: process.env.WARDENAUTHZ_API_KEY!,
 })
 
-// Check if a user has access
 const { allowed } = await rbac.access.hasAccess({
-  subjectId: user.id,
-  scopeId: workspace.id,
+  subjectId: 'user-123',
+  scopeId: 'workspace-abc',
   resource: 'documents',
   action: 'read',
 })
@@ -33,98 +30,85 @@ if (!allowed) {
 }
 ```
 
-## API Reference
+## CLI Usage
 
-## CLI (Declarative Manifest Apply)
-
-The package now ships with an `ec-access-control` CLI for declarative authorization manifest apply:
+The package ships with an `ec-warden-auth` CLI for declarative authorization manifests:
 
 ```bash
-# Uses ACCESS_CONTROL_API_URL and ACCESS_CONTROL_API_KEY env vars
-ec-access-control apply \
+ec-warden-auth apply \
   --scope-id workspace-abc \
   --file ./authorization-manifest.yaml \
   --dry-run \
-  --idempotency-key deploy-2025-06-03
+  --idempotency-key deploy-2026-08-10
 ```
-
-Supported features:
-
-- JSON or YAML manifest input (`--file`, auto-detected by extension, or `--format`)
-- Dry-run apply (`--dry-run`)
-- Idempotency key override (`--idempotency-key`) with key echoed in output
-- Human-readable apply summary with operation counts/details
 
 Alternative command form:
 
 ```bash
-ec-access-control manifest apply --scope-id workspace-abc --file ./manifest.json
+ec-warden-auth manifest apply --scope-id workspace-abc --file ./manifest.json
 ```
 
-## MCP Endpoint (AI Agent Integrations)
+Supports JSON and YAML manifests. Auto-detects format by file extension (`--format json|yaml` for explicit).
 
-WardenAuth also exposes a Streamable HTTP MCP endpoint at `POST /v1/mcp` with tool `access.hasAccessBulk`.
-This is intended for integrations with MCP-capable agent runtimes (for example Claude Desktop-compatible flows or LangChain adapters).
+## Resources
 
 ### `rbac.access` — Access Evaluation
 
 ```typescript
 // Single check
 const { allowed } = await rbac.access.hasAccess({
-  subjectId: 'user-123',
-  scopeId: 'workspace-abc',
-  resource: 'documents',
-  action: 'read',
+  subjectId: 'user-123', scopeId: 'workspace-abc',
+  resource: 'documents', action: 'read',
 })
 
-// Bulk check (multiple resources/actions in one call)
+// Bulk check
 const results = await rbac.access.hasAccessBulk([
   { subjectId: 'user-123', scopeId: 'workspace-abc', resource: 'documents', action: 'read' },
   { subjectId: 'user-123', scopeId: 'workspace-abc', resource: 'documents', action: 'write' },
-  { subjectId: 'user-123', scopeId: 'workspace-abc', type: 'role', id: 'editor' },
 ])
-// results: [{ allowed: true, id: 'documents:read', ... }, ...]
 
-// List all effective permissions for a subject
+// List effective permissions for a subject
 const { permissions } = await rbac.access.listPermissions({
-  subjectId: 'user-123',
-  scopeId: 'workspace-abc',
+  subjectId: 'user-123', scopeId: 'workspace-abc',
 })
 
-// List all effective roles for a subject
+// List effective roles for a subject
 const { roles } = await rbac.access.listRoles({
-  subjectId: 'user-123',
-  scopeId: 'workspace-abc',
+  subjectId: 'user-123', scopeId: 'workspace-abc',
 })
 
-// Permission receipts — portable, HMAC-signed proof of a decision (non-repudiation).
-// Verification is metered (no offline check).
+// Simulate access (what-if analysis)
+const simResult = await rbac.access.simulate({
+  subjectId: 'user-123', scopeId: 'ws-1',
+  checks: [{ resource: 'documents', action: 'delete' }],
+  permissions: [{ id: 'documents:read', resource: 'documents', action: 'read', effect: 'allow' }],
+  roles: [], subjectRoleIds: [],
+})
+
+// Permission receipts — portable, HMAC-signed proof of a decision (non-repudiation)
 const { receipt, decision } = await rbac.access.issueReceipt({
-  subjectId: 'user-123',
-  resource: 'documents',
-  action: 'read',
+  subjectId: 'user-123', resource: 'documents', action: 'read',
 })
-
 const { valid, claims, reason } = await rbac.access.verifyReceipt({ receipt })
 ```
 
 ### `rbac.permissions` — Permission Management
 
 ```typescript
-// Create a permission
+// Create
 await rbac.permissions.create('workspace-abc', {
-  id: 'documents:read',
-  resource: 'documents',
-  action: 'read',
-  effect: 'allow',
-  name: 'Read Documents',
+  id: 'documents:read', resource: 'documents', action: 'read', effect: 'allow',
+  name: 'Read Documents', description: 'Can view documents',
 })
 
 // List with cursor pagination
-const page1 = await rbac.permissions.list('workspace-abc', { limit: 50 })
-const page2 = await rbac.permissions.list('workspace-abc', { limit: 50, nextToken: page1.nextToken })
+const { items, nextToken } = await rbac.permissions.list('workspace-abc', { limit: 50 })
+const page2 = await rbac.permissions.list('workspace-abc', { limit: 50, nextToken })
 
-// Bulk create (for seeding)
+// Get by ID
+const perm = await rbac.permissions.getById('workspace-abc', 'documents:read')
+
+// Bulk create (seeding)
 await rbac.permissions.bulkCreate('workspace-abc', [
   { id: 'documents:read', resource: 'documents', action: 'read', effect: 'allow', name: 'Read Documents' },
   { id: 'documents:write', resource: 'documents', action: 'write', effect: 'allow', name: 'Write Documents' },
@@ -142,41 +126,44 @@ await rbac.permissions.delete('workspace-abc', 'documents:read')
 ```typescript
 // Create a role
 await rbac.roles.create('workspace-abc', {
-  id: 'editor',
-  name: 'Editor',
+  id: 'editor', name: 'Editor',
   permissionIds: ['documents:read', 'documents:write'],
 })
 
 // List roles
 const { items } = await rbac.roles.list('workspace-abc', { limit: 20 })
 
-// Assign permissions to a role
+// Get by ID
+const role = await rbac.roles.getById('workspace-abc', 'editor')
+
+// Update (reassign permissions)
 await rbac.roles.update('workspace-abc', 'editor', {
-  permissionIds: ['documents:read', 'documents:write', 'documents:delete'],
+  permissionIds: ['documents:read'],
 })
+
+// Delete
+await rbac.roles.delete('workspace-abc', 'editor')
 ```
 
-### `rbac.accessPolicies` — Assign Roles to Subjects
+### `rbac.accessPolicies` — Policy Assignment
 
 ```typescript
-// Assign a role to a user in a workspace
-await rbac.accessPolicies.create('workspace-abc', {
+// Assign roles/permissions to a subject
+const policy = await rbac.accessPolicies.create('workspace-abc', {
   subjectId: 'user-123',
   roleIds: ['editor'],
   permissionIds: ['billing:read'], // optional direct permissions
-  expiresAt: '2025-12-31T23:59:59Z', // optional expiry
+  expiresAt: '2026-12-31T23:59:59Z', // optional expiry
 })
 
-// List policies for a scope
+// List by scope
 const items = await rbac.accessPolicies.listByScope('workspace-abc')
 
-// List policies for a specific user
-const userPolicies = await rbac.accessPolicies.listBySubject('user-123')
+// List by subject
+const policies = await rbac.accessPolicies.listBySubject('user-123')
 
-// Update (change roles/permissions)
-await rbac.accessPolicies.update('workspace-abc', policyId, {
-  roleIds: ['viewer'],
-})
+// Update
+await rbac.accessPolicies.update('workspace-abc', policyId, { roleIds: ['viewer'] })
 
 // Revoke
 await rbac.accessPolicies.delete('workspace-abc', policyId)
@@ -184,57 +171,96 @@ await rbac.accessPolicies.delete('workspace-abc', policyId)
 
 ### `rbac.scopes` — Scope Management
 
-Scopes represent tenants, workspaces, or any organizational unit. They form a hierarchy: organization → workspace → application.
-
 ```typescript
 // Create a workspace under an org
 await rbac.scopes.create({
-  id: 'workspace-abc',
-  name: 'Acme Corp',
-  type: 'workspace',
-  parentId: 'org-xyz',
+  id: 'workspace-abc', name: 'Acme Corp',
+  type: 'workspace', parentId: 'org-xyz',
 })
 
-// List all accessible scopes
+// Clone a scope (deep copy permissions, roles, and policies)
+await rbac.scopes.clone('source-scope', {
+  id: 'new-scope', name: 'Cloned Workspace',
+})
+
+// List
 const { items } = await rbac.scopes.list({ type: 'workspace', limit: 20 })
 
-// Get a specific scope
+// Get by ID
 const scope = await rbac.scopes.getById('workspace-abc')
+
+// Update
+await rbac.scopes.update('workspace-abc', { name: 'Acme Corp v2' })
+
+// Delete
+await rbac.scopes.delete('workspace-abc')
+
+// Apply declarative manifest (create and delete modes)
+const result = await rbac.scopes.applyManifest('workspace-abc', {
+  serialization: 'yaml',
+  manifest: {
+    apiVersion: 'access-control.barksoft/v1alpha1',
+    kind: 'AuthorizationManifest',
+    spec: {
+      mode: 'authoritative',
+      deletionPolicy: 'delete-missing',
+      permissions: [
+        { id: 'documents:read', name: 'Read Documents', resource: 'documents', action: 'read', effect: 'allow' },
+      ],
+      roles: [
+        { id: 'viewer', name: 'Viewer', permissionIds: ['documents:read'] },
+      ],
+      accessPolicies: [
+        { subjectId: 'user-1', roleIds: ['viewer'] },
+      ],
+    },
+  },
+})
+// result: { scopeId, dryRun, manifestHash, summary: { totalPlanned, applied, planned, failed }, operations }
 ```
 
 ### `rbac.apiKeys` — API Key Management
 
 ```typescript
-// Create an evaluation key (for access checks in your app)
-const { key } = await rbac.apiKeys.create('workspace-abc', {
-  name: 'Production evaluation key',
-  type: 'evaluation',
+// Create
+const { key, keyId } = await rbac.apiKeys.create('workspace-abc', {
+  name: 'Production key', type: 'management',
 })
-// Store `key` securely — it's only shown once
 
 // List keys (masked)
-const keys = await rbac.apiKeys.list('workspace-abc')
+const { items } = await rbac.apiKeys.list('workspace-abc')
 
-// Revoke a key
+// Rotate
+await rbac.apiKeys.rotate('workspace-abc', keyId)
+
+// Delete (revoke)
 await rbac.apiKeys.delete('workspace-abc', keyId)
 ```
 
 ### `rbac.webhooks` — Webhook Endpoints
 
 ```typescript
-// Register a webhook
-const { secret } = await rbac.webhooks.create('workspace-abc', {
+// Create
+const { secret, id } = await rbac.webhooks.create('workspace-abc', {
   url: 'https://your-app.com/webhooks/rbac',
   events: ['permission.created', 'role.updated', 'access-policy.created'],
   active: true,
 })
-// Store `secret` to verify webhook signatures
 
-// List webhooks
+// List
 const { items } = await rbac.webhooks.list('workspace-abc')
 
+// Update
+await rbac.webhooks.update('workspace-abc', id, { events: ['access-policy.deleted'] })
+
 // Send a test delivery
-await rbac.webhooks.test('workspace-abc', endpointId)
+await rbac.webhooks.test('workspace-abc', id)
+
+// List delivery history
+const deliveries = await rbac.webhooks.listDeliveries('workspace-abc', id)
+
+// Delete
+await rbac.webhooks.delete('workspace-abc', id)
 ```
 
 ### `rbac.resourceTypes` — Resource Catalog
@@ -242,13 +268,17 @@ await rbac.webhooks.test('workspace-abc', endpointId)
 ```typescript
 // Define a resource type
 await rbac.resourceTypes.create('workspace-abc', {
-  id: 'documents',
-  name: 'Documents',
-  description: 'User-created documents',
+  id: 'documents', name: 'Documents', description: 'User-created documents',
 })
 
 // List resource types
 const { items } = await rbac.resourceTypes.list('workspace-abc')
+
+// Update
+await rbac.resourceTypes.update('workspace-abc', 'documents', { description: 'Shared documents' })
+
+// Delete
+await rbac.resourceTypes.delete('workspace-abc', 'documents')
 ```
 
 ### `rbac.tuples` — Relationship Tuples
@@ -265,11 +295,9 @@ const { written, deleted } = await rbac.tuples.write('scope-1', {
 
 // List tuples for a subject
 const { tuples, nextToken } = await rbac.tuples.list('scope-1', 'alice')
-// tuples: [{ subject: 'alice', relation: 'editor', object: 'document:123', ... }]
 
 // List subjects with access to a resource
 const { tuples: subjects } = await rbac.tuples.listByResource('scope-1', 'document', '123')
-// subjects: [{ subject: 'alice', ... }, { subject: 'bob', ... }]
 ```
 
 ### `rbac.audit` — Audit Logs
@@ -278,92 +306,219 @@ const { tuples: subjects } = await rbac.tuples.listByResource('scope-1', 'docume
 // Paginate through audit events
 const { items, nextToken } = await rbac.audit.list('workspace-abc', { limit: 50 })
 
-// Export audit events (CSV or JSON, with optional eventType filter)
+// Export audit events (CSV or JSON)
 const csv = await rbac.audit.export({
-  scopeId: 'workspace-abc',
-  format: 'csv',
+  scopeId: 'workspace-abc', format: 'csv',
   eventTypes: ['permission.created', 'role.updated'],
-  startDate: '2026-01-01',
-  endDate: '2026-06-01',
+  startDate: '2026-01-01', endDate: '2026-06-01',
 })
 
 // Verify HMAC signatures for tamper detection (SOC2)
 const result = await rbac.audit.verify({
   scopeId: 'workspace-abc',
-  startDate: '2026-01-01',
-  endDate: '2026-06-01',
+  startDate: '2026-01-01', endDate: '2026-06-01',
 })
-// result: { total: 1420, matched: 1420, mismatchCount: 0, mismatches: [] }
+```
+
+### `rbac.sessionTokens` — Session Tokens
+
+```typescript
+// Mint a session token
+const { token, expiresAt } = await rbac.sessionTokens.mint({
+  subjectId: 'user-123', scopeId: 'workspace-abc',
+})
+
+// Mint with intent (restricted scope)
+const intentResult = await rbac.sessionTokens.mintWithIntent({
+  subjectId: 'user-123', scopeId: 'workspace-abc',
+  resources: ['documents'], actions: ['read'],
+})
+
+// Verify an intent call
+await rbac.sessionTokens.verifyIntentCall({ token: '...', resource: 'documents', action: 'read' })
+
+// Revoke
+await rbac.sessionTokens.revoke('jti-123')
+```
+
+### `rbac.sodConstraints` — Separation of Duties
+
+```typescript
+// Create constraint
+await rbac.sodConstraints.create('workspace-abc', {
+  id: 'approver-submitter',
+  name: 'Approver cannot be Submitter',
+  mutuallyExclusiveRoleIds: ['approver', 'submitter'],
+})
+
+// List
+const constraints = await rbac.sodConstraints.list('workspace-abc')
+
+// Delete
+await rbac.sodConstraints.delete('workspace-abc', 'approver-submitter')
+```
+
+### `rbac.teamMembers` — Team Management
+
+```typescript
+// Add a member
+await rbac.teamMembers.add('workspace-abc', {
+  subjectId: 'user-456', role: 'admin',
+})
+
+// List members
+const members = await rbac.teamMembers.list('workspace-abc')
+
+// Remove
+await rbac.teamMembers.remove('workspace-abc', 'user-456')
+```
+
+### `rbac.mcpServers` — MCP Integrations
+
+```typescript
+// Create an MCP server integration
+await rbac.mcpServers.create('workspace-abc', {
+  id: 'claude-internal', name: 'Claude Internal Tools',
+})
+
+// List
+const servers = await rbac.mcpServers.list('workspace-abc')
+
+// Get by ID
+const server = await rbac.mcpServers.getById('workspace-abc', 'claude-internal')
+
+// Update
+await rbac.mcpServers.update('workspace-abc', 'claude-internal', { name: 'Updated Name' })
+
+// Delete
+await rbac.mcpServers.delete('workspace-abc', 'claude-internal')
+```
+
+### `rbac.consent` — MCP Consent & Approvals
+
+```typescript
+// List servers requiring consent
+const servers = await rbac.consent.getServers('workspace-abc')
+
+// Get consent context for a server
+const ctx = await rbac.consent.getContext('server-key', 'workspace-abc')
+
+// Get full portal context (all servers with access-aware tool views)
+const portalContext = await rbac.consent.getPortalContext('workspace-abc')
+
+// Grant consent
+await rbac.consent.grant({ authRequestId: 'req-1', serverKey: 'sk', toolId: 'tool-1' })
+
+// Deny
+await rbac.consent.deny('req-1')
+
+// List active grants
+const grants = await rbac.consent.listGrants()
+
+// Revoke a grant
+await rbac.consent.revokeGrant('grant-1')
+
+// List pending approvals
+const approvals = await rbac.consent.listApprovals()
+
+// Approve/deny an approval with optional reason
+await rbac.consent.approveApproval('id-1', 'Approved by admin')
+await rbac.consent.denyApproval('id-2', 'Policy violation')
+
+// Approval history
+const history = await rbac.consent.listApprovalHistory()
+
+// Push notification support
+const { enabled, publicKey } = await rbac.consent.getPushPublicKey()
+await rbac.consent.subscribePush({ endpoint: '...', keys: { p256dh: '...', auth: '...' } })
+await rbac.consent.unsubscribePush('endpoint-url')
+
+// Velocity config
+const config = await rbac.consent.getVelocityConfig()
+await rbac.consent.updateVelocityConfig({ enabled: true, perGrantPerMinute: 10 })
+
+// User assignments
+const assignments = await rbac.consent.listAssignments('ws-1', 'user-1')
+await rbac.consent.setAssignment('ws-1', 'user-1', 'server-key', 'medium', { tool: ['read'] })
+await rbac.consent.deleteAssignment('ws-1', 'user-1', 'server-key')
+```
+
+### `rbac.agent` — Agent Identity & Access
+
+```typescript
+// Identify an agent
+const { agentId } = await rbac.agent.identify('ws-1', { name: 'Claude', version: '3.5' })
+
+// Check agent access
+const { allowed } = await rbac.agent.check('ws-1', {
+  agentId: 'agent-123', resource: 'documents', action: 'read',
+})
 ```
 
 ## Error Handling
 
 ```typescript
-import { WardenAuthClient, AccessControlApiError, AccessControlRetryError } from '@ecarrizo/access-control'
+import { WardenAuthApiError, WardenAuthRetryError } from '@ecarrizo2/wardenauthz-js'
 
 try {
-  await rbac.permissions.getById('workspace-abc', 'unknown-permission')
+  await rbac.permissions.getById('workspace-abc', 'unknown')
 } catch (err) {
-  if (err instanceof AccessControlRetryError) {
+  if (err instanceof WardenAuthRetryError) {
     console.error(`Request failed after ${err.attempts} retry attempts`)
-  } else if (err instanceof AccessControlApiError) {
+  } else if (err instanceof WardenAuthApiError) {
     console.error(`API error ${err.status}:`, err.body)
   }
 }
 ```
 
-## Automatic Retries
+### Error Classes
 
-All HTTP methods automatically retry on transient errors (429, 500, 502, 503, 504) with exponential backoff. Configure retry behavior globally via the `WardenAuthClientConfig` or per-request via `RequestOptions`:
+| Class                    | Name                      | Properties                  |
+| ------------------------ | ------------------------- | --------------------------- |
+| `WardenAuthApiError`     | `'WardenAuthApiError'`    | `status`, `body`, `message` |
+| `WardenAuthRetryError`   | `'WardenAuthRetryError'`  | `status`, `body`, `message`, `attempts` |
+
+`WardenAuthRetryError` extends `WardenAuthApiError`, so `instanceof WardenAuthApiError` matches both.
+
+## Retry Behavior
+
+All HTTP methods automatically retry on transient errors with exponential backoff.
+
+### Retryable Status Codes
+
+| Status | Meaning              |
+| ------ | -------------------- |
+| 429    | Rate limited         |
+| 500    | Internal server error|
+| 502    | Bad gateway          |
+| 503    | Service unavailable  |
+| 504    | Gateway timeout      |
+
+Non-retryable status codes (400, 401, 403, 404, etc.) throw immediately.
+
+### Configuration
 
 ```typescript
-// Global retry config (in WardenAuthClientConfig)
-const rbac = new WardenAuthClient({
-  apiUrl: '...',
-  apiKey: '...',
-  // Retry is enabled by default with maxRetries: 3, baseDelayMs: 1000
-})
+// Default: maxRetries: 3, baseDelayMs: 1000 (1s, 2s, 4s)
 
 // Per-request: customize retry
-await rbac.permissions.list(
-  'workspace-abc',
-  {},
-  {
-    retry: { maxRetries: 5, baseDelayMs: 2000 }, // 5 retries, 2s initial delay
-  }
-)
+await rbac.permissions.list('workspace-abc', {}, {
+  retry: { maxRetries: 5, baseDelayMs: 2000 }, // 5 retries, 2s initial delay
+})
 
 // Per-request: disable retry entirely
-await rbac.permissions.list(
-  'workspace-abc',
-  {},
-  {
-    retry: false,
-  }
-)
+await rbac.permissions.list('workspace-abc', {}, {
+  retry: false,
+})
 ```
 
-**Default retry behavior:**
+## Advanced Configuration
 
-- Retries on status codes: `429`, `500`, `502`, `503`, `504`
-- Max 3 retry attempts
-- Exponential backoff: 1s, 2s, 4s
-- Non-retryable errors (4xx except 429) are thrown immediately
-
-## Connection Keep-Alive
-
-On Node.js runtimes the client installs a tuned global keep-alive dispatcher (longer
-keep-alive timeout, larger connection pool) so repeated calls reuse warm TLS
-connections instead of paying a handshake each time. This is a no-op in browser/edge
-runtimes, where the platform manages keep-alive. No configuration required.
-
-## Request Abort / Timeout
-
-Set per-request abort signals for deadline control:
+### Request Timeouts (Abort Controller)
 
 ```typescript
-// Manually create an AbortController with a timeout
-const controller = rbac.createAbortController(5000) // 5 second timeout
+// Built-in helper with 5s timeout
+const controller = rbac.createAbortController(5000)
 
 try {
   const { allowed } = await rbac.access.hasAccess(
@@ -376,126 +531,32 @@ try {
   }
 }
 
-// Use with your own AbortController
+// Custom AbortController
 const controller = new AbortController()
 setTimeout(() => controller.abort(), 2000)
-
 await rbac.permissions.list('workspace-abc', {}, { signal: controller.signal })
 ```
 
-All resource methods accept an optional `RequestOptions` parameter as the last argument:
+### Connection Keep-Alive
+
+On Node.js runtimes the client installs a tuned global keep-alive dispatcher (60s keep-alive timeout, 128 connections) so repeated calls reuse warm TLS connections. This is a silent no-op in browser/edge runtimes. No configuration required.
+
+### Zod Validation
+
+The SDK exports Zod schemas for all input types:
 
 ```typescript
-interface RequestOptions {
-  signal?: AbortSignal
-  retry?: Partial<RetryConfig> | false
-}
-```
+import { schemas } from '@ecarrizo2/wardenauthz-js'
 
-## Zod Validation
-
-Version `0.5.0+` of the SDK exports Zod schemas for all input types. Use them to validate user input before sending to the API:
-
-```typescript
-import { z } from 'zod'
-import { schemas } from '@ecarrizo/access-control'
-
-// Validate a create permission input
-const parsed = schemas.createPermissionInput.parse({
-  id: 'documents:read',
-  resource: 'documents',
-  action: 'read',
-  effect: 'allow',
+const parsed = schemas.hasAccessInput.parse({
+  subjectId: 'user-123', scopeId: 'workspace-abc',
+  resource: 'documents', action: 'read',
 })
-
-// Validate access check input
-const check = schemas.hasAccessInput.parse({
-  subjectId: 'user-123',
-  scopeId: 'workspace-abc',
-  resource: 'documents',
-  action: 'read',
-})
-
-// The SDK also exports inferred TypeScript types from Zod:
-import type { CreatePermissionInput, HasAccessInput } from '@ecarrizo/access-control'
 ```
 
-Available schemas:
-
-| Schema                              | Description                          |
-| ----------------------------------- | ------------------------------------ |
-| `schemas.createPermissionInput`     | Permission creation validation       |
-| `schemas.updatePermissionInput`     | Permission update validation         |
-| `schemas.createRoleInput`           | Role creation validation             |
-| `schemas.updateRoleInput`           | Role update validation               |
-| `schemas.createAccessPolicyInput`   | Policy assignment validation         |
-| `schemas.updateAccessPolicyInput`   | Policy update validation             |
-| `schemas.hasAccessInput`            | Access check input validation        |
-| `schemas.accessCheckInput`          | Bulk check item validation           |
-| `schemas.createScopeInput`          | Scope creation validation            |
-| `schemas.createApiKeyInput`         | API key creation validation          |
-| `schemas.createWebhookInput`        | Webhook creation validation          |
-| `schemas.registerOrganizationInput` | Organization registration validation |
-
-## Express / Next.js Middleware Example
-
-```typescript
-import { WardenAuthClient } from '@ecarrizo/access-control'
-
-const rbac = new WardenAuthClient({
-  apiUrl: process.env.ACCESS_CONTROL_API_URL!,
-  apiKey: process.env.ACCESS_CONTROL_API_KEY!,
-})
-
-// Express middleware
-function requirePermission(resource: string, action: string) {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    const { allowed } = await rbac.access.hasAccess({
-      subjectId: req.user.id,
-      scopeId: req.workspace.id,
-      resource,
-      action,
-    })
-
-    if (!allowed) {
-      return res.status(403).json({ error: 'Forbidden' })
-    }
-
-    next()
-  }
-}
-
-// Usage
-app.delete('/documents/:id', requirePermission('documents', 'delete'), deleteDocument)
-```
-
-## Next.js App Router Example
-
-```typescript
-// app/api/documents/route.ts
-import { rbac } from '@/lib/rbac'
-
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
-  const { userId, workspaceId } = await getSession(req)
-
-  const { allowed } = await rbac.access.hasAccess({
-    subjectId: userId,
-    scopeId: workspaceId,
-    resource: 'documents',
-    action: 'delete',
-  })
-
-  if (!allowed) {
-    return Response.json({ error: 'Forbidden' }, { status: 403 })
-  }
-
-  // ... delete document
-}
-```
+Available schemas: `createPermissionInput`, `updatePermissionInput`, `createRoleInput`, `updateRoleInput`, `createAccessPolicyInput`, `updateAccessPolicyInput`, `hasAccessInput`, `accessCheckInput`, `createScopeInput`, `createApiKeyInput`, `createWebhookInput`, `registerOrganizationInput`.
 
 ## TypeScript Types
-
-All methods are fully typed. Key types exported from the package:
 
 ```typescript
 import type {
@@ -510,18 +571,16 @@ import type {
   ResourceTypeItem,
   HasAccessResult,
   PaginatedResult,
-  Effect, // 'allow' | 'deny'
-  ScopeType, // 'organization' | 'workspace' | 'application'
-  ApiKeyType, // 'management' | 'evaluation'
+  Effect,          // 'allow' | 'deny'
+  ScopeType,       // 'organization' | 'workspace' | 'application'
+  ApiKeyType,      // 'management' | 'application'
   WebhookEventType,
-} from '@ecarrizo/access-control'
+} from '@ecarrizo2/wardenauthz-js'
 ```
 
-## Links
+## API Reference
 
-- [Documentation](https://wardenauthz.com/docs)
-- [Pricing](https://wardenauthz.com/pricing)
-- [Dashboard](https://wardenauthz.com/dashboard)
+Full API documentation: [https://wardenauthz.com/docs](https://wardenauthz.com/docs)
 
 ## License
 
