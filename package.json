@@ -44,5 +44,12 @@
     "typescript": "^5.0.0 || ^6.0.0",
     "openapi-typescript": "^7"
   },
-  "license": "SEE LICENSE IN LICENSE"
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ecarrizo2/wardenauthz-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ecarrizo2/wardenauthz-js/issues"
+  }
 }
