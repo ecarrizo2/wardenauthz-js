@@ -51,5 +51,8 @@
   },
   "bugs": {
     "url": "https://github.com/ecarrizo2/wardenauthz-js/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
