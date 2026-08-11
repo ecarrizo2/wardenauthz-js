@@ -14,10 +14,7 @@ export class AccessPoliciesResource {
   }
 
   async listBySubject(scopeId: string, subjectId: string): Promise<AccessPolicyItem[]> {
-    const result = await this.client.get<{ items: AccessPolicyItem[] }>(
-      `/v1/scope/${scopeId}/access-policy/subject/${subjectId}`
-    )
-    return result.items
+    return this.client.get<AccessPolicyItem[]>(`/v1/scope/${scopeId}/access-policy/subject/${subjectId}`)
   }
 
   async getById(scopeId: string, policyId: string): Promise<AccessPolicyItem> {

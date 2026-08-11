@@ -3,12 +3,16 @@ import { Effect, EffectSchema } from './common'
 
 export interface WardenAuthClientConfig {
   apiUrl: string
-  apiKey: string
+  apiKey?: string
+  getToken?: () => Promise<string>
+  tokenCacheMs?: number
 }
 
 export const WardenAuthClientConfigSchema = z.object({
   apiUrl: z.string(),
-  apiKey: z.string(),
+  apiKey: z.string().optional(),
+  getToken: z.function().optional(),
+  tokenCacheMs: z.number().optional(),
 })
 
 export type AuthorizationManifestSerialization = 'json' | 'yaml'

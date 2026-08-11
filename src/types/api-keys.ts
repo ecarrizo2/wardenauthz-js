@@ -9,6 +9,7 @@ export interface ApiKeyItem {
   subjectId: string
   name: string
   scopeId?: string
+  keyPrefix?: string
   expiresAt?: string
   lastUsedAt?: string
   attributes?: Record<string, string>
@@ -26,6 +27,7 @@ export const ApiKeyItemSchema = z.object({
   subjectId: z.string(),
   name: z.string(),
   scopeId: z.string().optional(),
+  keyPrefix: z.string().optional(),
   expiresAt: z.string().optional(),
   lastUsedAt: z.string().optional(),
   attributes: z.record(z.string(), z.string()).optional(),
@@ -46,6 +48,7 @@ export const ApiKeyCreatedItemSchema = ApiKeyItemSchema.extend({
 export interface CreateApiKeyInput {
   name: string
   type?: ApiKeyType
+  keyPrefix?: string
   expiresAt?: string
   attributes?: Record<string, string>
   permissions?: string[]
@@ -59,6 +62,7 @@ export interface CreateApiKeyInput {
 export const CreateApiKeyInputSchema = z.object({
   name: z.string().min(1).max(256),
   type: ApiKeyTypeSchema.optional(),
+  keyPrefix: z.string().min(3).max(20).regex(/^[a-z][a-z0-9]*_$/).optional(),
   expiresAt: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}/, 'expiresAt must be a valid ISO 8601 date string')

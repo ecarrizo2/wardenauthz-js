@@ -13,6 +13,11 @@ export interface RequestOptions {
   retry?: Partial<RetryConfig> | false
 }
 
+export interface TokenProviderConfig {
+  getToken: () => Promise<string>
+  tokenCacheMs?: number
+}
+
 const RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504])
 
 function isRetryable(status: number): boolean {
@@ -42,16 +47,6 @@ export class WardenAuthRetryError extends WardenAuthApiError {
   }
 }
 
-/**
- * Best-effort connection keep-alive tuning for Node runtimes.
- *
- * Node's global `fetch` (undici) already pools connections, but the default
- * keep-alive timeout is short. When undici is resolvable we install a tuned
- * global dispatcher with a longer keep-alive and a larger connection pool so
- * high-throughput server usage reuses warm TLS connections instead of paying a
- * handshake per call. This is a silent no-op in browsers / edge runtimes (or
- * when undici is not installed), where the platform handles keep-alive itself.
- */
 let dispatcherTuned = false
 async function tuneNodeKeepAlive(): Promise<void> {
   if (dispatcherTuned) return
@@ -74,8 +69,6 @@ async function tuneNodeKeepAlive(): Promise<void> {
       })
     )
   } catch {
-    // undici not resolvable (browser/edge or not installed) — built-in fetch
-    // keep-alive still applies, so this is a safe no-op.
     return
   }
 }
@@ -84,18 +77,54 @@ void tuneNodeKeepAlive()
 
 export class HttpClient {
   private readonly retryConfig: RetryConfig
+  private readonly apiKey?: string
+  private readonly getToken?: () => Promise<string>
+  private readonly tokenCacheMs: number
+  private tokenCache: { token: string; expiresAt: number } | null = null
 
+  constructor(baseUrl: string, apiKey: string)
+  constructor(baseUrl: string, apiKey: undefined, getToken: () => Promise<string>, tokenCacheMs?: number)
   constructor(
     private readonly baseUrl: string,
-    private readonly apiKey: string
+    apiKey?: string,
+    getToken?: () => Promise<string>,
+    tokenCacheMs?: number
   ) {
+    if (!apiKey && !getToken) {
+      throw new Error('HttpClient requires either apiKey or getToken')
+    }
+    if (apiKey && getToken) {
+      throw new Error('HttpClient accepts apiKey or getToken, not both')
+    }
+    this.apiKey = apiKey
+    this.getToken = getToken
+    this.tokenCacheMs = tokenCacheMs ?? 60_000
     this.retryConfig = { ...DEFAULT_RETRY_CONFIG }
   }
 
-  private headers(): Record<string, string> {
+  private async resolveAuthValue(): Promise<string> {
+    if (this.apiKey) {
+      return this.apiKey
+    }
+
+    const now = Date.now()
+    if (this.tokenCache && now < this.tokenCache.expiresAt) {
+      return this.tokenCache.token
+    }
+
+    const token = await this.getToken!()
+    this.tokenCache = { token, expiresAt: now + this.tokenCacheMs }
+
+    return token
+  }
+
+  private async headers(): Promise<Record<string, string>> {
+    const authValue = await this.resolveAuthValue()
+
     return {
       'Content-Type': 'application/json',
-      'x-api-key': this.apiKey,
+      'x-api-key': authValue,
+      Authorization: `Bearer ${authValue}`,
     }
   }
 
@@ -162,7 +191,7 @@ export class HttpClient {
     return this.withRetry(async () => {
       const response = await fetch(`${this.baseUrl}${path}`, {
         method: 'GET',
-        headers: this.headers(),
+        headers: await this.headers(),
         signal: opts?.signal,
       })
 
@@ -174,7 +203,7 @@ export class HttpClient {
     return this.withRetry(async () => {
       const response = await fetch(`${this.baseUrl}${path}`, {
         method: 'POST',
-        headers: this.headers(),
+        headers: await this.headers(),
         body: JSON.stringify(body),
         signal: opts?.signal,
       })
@@ -187,7 +216,7 @@ export class HttpClient {
     return this.withRetry(async () => {
       const response = await fetch(`${this.baseUrl}${path}`, {
         method: 'PATCH',
-        headers: this.headers(),
+        headers: await this.headers(),
         body: JSON.stringify(body),
         signal: opts?.signal,
       })
@@ -200,7 +229,7 @@ export class HttpClient {
     return this.withRetry(async () => {
       const response = await fetch(`${this.baseUrl}${path}`, {
         method: 'PUT',
-        headers: this.headers(),
+        headers: await this.headers(),
         body: JSON.stringify(body),
         signal: opts?.signal,
       })
@@ -213,7 +242,7 @@ export class HttpClient {
     return this.withRetry(async () => {
       const response = await fetch(`${this.baseUrl}${path}`, {
         method: 'DELETE',
-        headers: this.headers(),
+        headers: await this.headers(),
         ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
         signal: opts?.signal,
       })
@@ -226,7 +255,7 @@ export class HttpClient {
     return this.withRetry(async () => {
       const response = await fetch(`${this.baseUrl}${path}`, {
         method: 'GET',
-        headers: this.headers(),
+        headers: await this.headers(),
         signal: opts?.signal,
       })
 

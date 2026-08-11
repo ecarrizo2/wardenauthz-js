@@ -1,4 +1,4 @@
-import { HttpClient, RequestOptions } from './http-client'
+import { HttpClient, RequestOptions, TokenProviderConfig } from './http-client'
 import { ScopesResource } from './resources/scopes'
 import { PermissionsResource } from './resources/permissions'
 import { RolesResource } from './resources/roles'
@@ -40,7 +40,13 @@ export class WardenAuthClient {
   private readonly httpClient: HttpClient
 
   constructor(config: WardenAuthClientConfig) {
-    this.httpClient = new HttpClient(config.apiUrl, config.apiKey)
+    if (config.getToken) {
+      this.httpClient = new HttpClient(config.apiUrl, undefined, config.getToken, config.tokenCacheMs)
+    } else if (config.apiKey) {
+      this.httpClient = new HttpClient(config.apiUrl, config.apiKey)
+    } else {
+      throw new Error('WardenAuthClient requires apiKey or getToken in config')
+    }
 
     this.scopes = new ScopesResource(this.httpClient)
     this.permissions = new PermissionsResource(this.httpClient)
