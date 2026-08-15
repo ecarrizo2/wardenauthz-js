@@ -35,7 +35,7 @@
   ],
   "homepage": "https://wardenauthz.com",
   "dependencies": {
-    "js-yaml": "^4.3.1",
+    "js-yaml": "^5.2.3",
     "zod": "^4.4.3"
   },
   "devDependencies": {
