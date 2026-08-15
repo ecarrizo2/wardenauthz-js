@@ -135,4 +135,15 @@ export class ConsentResource {
       `/v1/scope/${scopeId}/mcp-assignment/${encodeURIComponent(subjectId)}/${encodeURIComponent(serverKey)}`
     )
   }
+
+  /**
+   * Enterprise-Managed Authorization (EMA): provisions an MCP server for every active team member
+   * at a capped trust tier, so they get it zero-touch (no per-user OAuth).
+   */
+  async provisionForOrg(
+    scopeId: string,
+    body: { serverKey: string; maxTier: McpTrustTier }
+  ): Promise<{ provisioned: number }> {
+    return this.client.post(`/v1/scope/${scopeId}/mcp-assignment/provision`, body)
+  }
 }
