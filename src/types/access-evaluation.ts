@@ -44,6 +44,27 @@ export type HasAccessInput = AccessCheckInput
 
 export const HasAccessInputSchema = AccessCheckInputSchema
 
+/** A self-check: the subject is the authenticated API key, so `subjectId` is omitted. */
+export interface SelfAccessCheckInput {
+  scopeId: string
+  resource: string
+  resourceId?: string
+  action: string
+  context?: AccessCheckContext
+  includeReason?: boolean
+}
+
+export const SelfAccessCheckInputSchema = z.object({
+  scopeId: z.string(),
+  resource: z.string(),
+  resourceId: z.string().optional(),
+  action: z.string(),
+  context: AccessCheckContextSchema.optional(),
+  includeReason: z.boolean().optional(),
+})
+
+export type SelfAccessCheckResult = AccessCheckResult
+
 export interface AccessCheckReasoningEntry {
   roleId: string
   roleName: string
@@ -91,6 +112,8 @@ export const AccessCheckResultSchema = AccessCheckInputSchema.extend({
 export type HasAccessResult = AccessCheckResult
 
 export const HasAccessResultSchema = AccessCheckResultSchema
+
+export const SelfAccessCheckResultSchema = AccessCheckResultSchema
 
 export type HasAccessBulkInput = AccessCheckInput[]
 

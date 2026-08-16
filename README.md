@@ -63,6 +63,11 @@ const { allowed } = await rbac.access.hasAccess({
   resource: 'documents', action: 'read',
 })
 
+// M2M self-check — the authenticated API key is the subject (no subjectId)
+const { allowed: selfAllowed } = await rbac.access.hasAccessSelf({
+  scopeId: 'workspace-abc', resource: 'orders', action: 'find-by-id',
+})
+
 // Bulk check
 const results = await rbac.access.hasAccessBulk([
   { subjectId: 'user-123', scopeId: 'workspace-abc', resource: 'documents', action: 'read' },

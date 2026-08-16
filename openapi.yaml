@@ -6481,6 +6481,109 @@ paths:
                 scopeId: string
                 resource: string
                 action: string
+  /v1/access/check-self:
+    post:
+      operationId: checkAccessSelf
+      summary: Evaluate access for the authenticated API key
+      description: Checks whether the authenticated API key has permission to perform an action on a resource within the given scope. The subject is the key itself; scopeId is required and must be within the key hierarchy.
+      tags:
+        - Access Evaluation
+      responses:
+        '200':
+          description: Access evaluation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subjectId:
+                    type: string
+                  scopeId:
+                    type: string
+                  resource:
+                    type: string
+                  resourceId:
+                    type: string
+                  action:
+                    type: string
+                  includeReason:
+                    type: boolean
+                  allowed:
+                    type: boolean
+                  error:
+                    type: string
+                  inheritedFromScope:
+                    type: string
+                required:
+                  - subjectId
+                  - scopeId
+                  - resource
+                  - action
+                  - allowed
+                example:
+                  subjectId: string
+                  scopeId: string
+                  resource: string
+                  action: string
+                  allowed: true
+        '400':
+          description: Validation error — malformed input or missing required field
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Forbidden — scope is outside the key's hierarchy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '429':
+          description: Too many requests — rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                scopeId:
+                  type: string
+                resource:
+                  type: string
+                resourceId:
+                  type: string
+                action:
+                  type: string
+                context:
+                  type: object
+                  additionalProperties: true
+                includeReason:
+                  type: boolean
+              required:
+                - scopeId
+                - resource
+                - action
+              example:
+                scopeId: string
+                resource: orders
+                action: find-by-id
   /v1/access/check-bulk:
     post:
       operationId: checkAccessBulk

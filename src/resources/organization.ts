@@ -5,22 +5,22 @@ export class OrganizationResource {
   constructor(private readonly client: HttpClient) {}
 
   async get(): Promise<OrganizationItem> {
-    return this.client.get('/v1/organization')
+    return this.client.get('/v1/admin/organization')
   }
 
   async update(input: UpdateOrganizationInput): Promise<OrganizationItem> {
-    return this.client.patch('/v1/organization', input)
+    return this.client.patch('/v1/admin/organization', input)
   }
 
   async delete(): Promise<void> {
-    return this.client.delete('/v1/organization')
+    return this.client.delete('/v1/admin/organization')
   }
 
   async getIpAllowlist(orgId: string): Promise<IpAllowlistResult> {
-    return this.client.get(`/v1/org/${orgId}/ip-allowlist`)
+    return this.client.get(`/v1/admin/org/${orgId}/ip-allowlist`)
   }
 
   async updateIpAllowlist(orgId: string, input: UpdateIpAllowlistInput): Promise<IpAllowlistResult> {
-    return this.client.put(`/v1/org/${orgId}/ip-allowlist`, input)
+    return this.client.put(`/v1/admin/org/${orgId}/ip-allowlist`, input)
   }
 }

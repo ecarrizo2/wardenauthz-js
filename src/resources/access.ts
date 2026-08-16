@@ -8,6 +8,8 @@ import {
   ListPermissionsResult,
   ListRolesInput,
   ListRolesResult,
+  SelfAccessCheckInput,
+  SelfAccessCheckResult,
   SimulateAccessInput,
   SimulateAccessResult,
   ReceiptIssueInput,
@@ -21,6 +23,11 @@ export class AccessResource {
 
   async hasAccess(input: HasAccessInput): Promise<HasAccessResult> {
     return this.client.post('/v1/access/check', input)
+  }
+
+  /** M2M self-check: evaluates the authenticated API key's own permissions. */
+  async hasAccessSelf(input: SelfAccessCheckInput): Promise<SelfAccessCheckResult> {
+    return this.client.post('/v1/access/check-self', input)
   }
 
   async hasAccessBulk(input: AccessCheckInput[]): Promise<AccessCheckResult[]> {

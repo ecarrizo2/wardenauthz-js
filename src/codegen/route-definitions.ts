@@ -29,6 +29,8 @@ import {
 import {
   AccessCheckInputSchema,
   AccessCheckResultSchema,
+  SelfAccessCheckInputSchema,
+  SelfAccessCheckResultSchema,
   ListPermissionsInputSchema,
   ListPermissionsResultSchema,
   ListRolesInputSchema,
@@ -724,6 +726,16 @@ export const routeDefinitions: RouteDefinition[] = [
     tags: ['Access Evaluation'],
     requestBody: { schema: AccessCheckInputSchema },
     responses: [{ status: 200, description: 'Access evaluation result', schema: AccessCheckResultSchema }],
+  },
+  {
+    method: 'post',
+    path: '/v1/access/check-self',
+    operationId: 'checkAccessSelf',
+    summary: 'Evaluate access for the authenticated API key',
+    description: 'Checks whether the authenticated API key has permission to perform an action on a resource within the given scope. The subject is the key itself; scopeId is required and must be within the key hierarchy.',
+    tags: ['Access Evaluation'],
+    requestBody: { schema: SelfAccessCheckInputSchema },
+    responses: [{ status: 200, description: 'Access evaluation result', schema: SelfAccessCheckResultSchema }],
   },
   {
     method: 'post',
