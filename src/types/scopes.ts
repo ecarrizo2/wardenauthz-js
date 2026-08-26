@@ -22,7 +22,6 @@ export const ScopeItemSchema = z.object({
 })
 
 export interface CreateScopeInput {
-  id: string
   name: string
   type: ScopeType
   parentId?: string
@@ -35,14 +34,6 @@ export interface CreateScopeInput {
 const uidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export const CreateScopeInputSchema = z.object({
-  id: z
-    .string()
-    .min(1)
-    .max(64)
-    .regex(
-      /^[a-zA-Z0-9_-]+$/,
-      'Scope ID format invalid — must contain only alphanumeric characters, hyphens, and underscores'
-    ),
   name: z.string().min(1).max(128),
   type: ScopeTypeSchema,
   parentId: z.string().regex(uidRegex, 'parentId must be a valid UUID v4').optional(),
