@@ -11108,7 +11108,7 @@ paths:
                   intent:
                     type: object
                     properties:
-                      integrationId:
+                      serverKey:
                         type: string
                       tools:
                         type: array
@@ -11119,7 +11119,7 @@ paths:
                         items:
                           type: string
                     required:
-                      - integrationId
+                      - serverKey
                       - tools
                   purpose:
                     type: string
@@ -11267,7 +11267,7 @@ paths:
                 intent:
                   type: object
                   properties:
-                    integrationId:
+                    serverKey:
                       type: string
                     tools:
                       type: array
@@ -11278,13 +11278,13 @@ paths:
                       items:
                         type: string
                   required:
-                    - integrationId
+                    - serverKey
                     - tools
               required:
                 - intent
               example:
                 intent:
-                  integrationId: string
+                  serverKey: string
                   tools:
                     - example
   /v1/session-token/verify-intent-call:
@@ -15072,7 +15072,7 @@ components:
     AgentIntentInput:
       type: object
       properties:
-        integrationId:
+        serverKey:
           type: string
         tools:
           type: array
@@ -15081,7 +15081,7 @@ components:
         instances:
           $ref: '#/components/schemas/AgentIntentInput'
       required:
-        - integrationId
+        - serverKey
         - tools
     VerifyIntentCallInput:
       type: object

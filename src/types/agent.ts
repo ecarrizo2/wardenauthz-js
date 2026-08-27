@@ -4,7 +4,7 @@ export interface AgentIntentInstance {
 }
 
 export interface AgentIntent {
-  integrationId: string
+  serverKey: string
   tools: string[]
   instances?: AgentIntentInstance[]
 }
@@ -44,7 +44,7 @@ export interface AgentCheckResult {
   jti: string
   principalId: string
   reason?: string
-  integrationId?: string
+  serverKey?: string
   pending?: boolean
   approvalId?: string
 }

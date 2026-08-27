@@ -52,13 +52,13 @@ export interface AgentIntentInstanceInput {
 }
 
 export interface AgentIntentInput {
-  integrationId: string
+  serverKey: string
   tools: string[]
   instances?: AgentIntentInstanceInput[]
 }
 
 export const AgentIntentInputSchema = z.object({
-  integrationId: z
+  serverKey: z
     .string()
     .min(1)
     .max(64)
