@@ -64,7 +64,7 @@ import {
   VerifyIntentCallInputSchema,
   VerifyIntentCallResultSchema,
 } from '../types/session-tokens'
-import { McpServerItemSchema as IntegrationItemSchema, CreateMcpServerInputSchema as CreateIntegrationInputSchema } from '../types/mcp-servers'
+import { McpServerItemSchema, CreateMcpServerInputSchema } from '../types/mcp-servers'
 import {
   SsoConfigItemSchema,
   CreateSsoConfigInputSchema,
@@ -1185,49 +1185,49 @@ export const routeDefinitions: RouteDefinition[] = [
     responses: [{ status: 200, description: 'Verification decision', schema: VerifyIntentCallResultSchema }],
   },
 
-  // ── Integrations ───────────────────────────────────────────────────────────
+  // ── MCP Servers ───────────────────────────────────────────────────────────
   {
     method: 'post',
-    path: '/v1/scope/{scopeId}/integration',
-    operationId: 'createIntegration',
-    summary: 'Create an integration',
-    tags: ['Integrations'],
+    path: '/v1/scope/{scopeId}/mcp-server',
+    operationId: 'createMcpServer',
+    summary: 'Create an MCP server',
+    tags: ['MCP Servers'],
     pathParams: [{ name: 'scopeId', schema: scopeIdParam }],
-    requestBody: { schema: CreateIntegrationInputSchema },
-    responses: [{ status: 201, description: 'Integration created', schema: IntegrationItemSchema }],
+    requestBody: { schema: CreateMcpServerInputSchema },
+    responses: [{ status: 201, description: 'MCP server created', schema: McpServerItemSchema }],
   },
   {
     method: 'get',
-    path: '/v1/scope/{scopeId}/integration',
-    operationId: 'listIntegrations',
-    summary: 'List integrations in a scope',
-    tags: ['Integrations'],
+    path: '/v1/scope/{scopeId}/mcp-server',
+    operationId: 'listMcpServers',
+    summary: 'List MCP servers in a scope',
+    tags: ['MCP Servers'],
     pathParams: [{ name: 'scopeId', schema: scopeIdParam }],
-    responses: [{ status: 200, description: 'List of integrations', schema: IntegrationItemSchema }],
+    responses: [{ status: 200, description: 'List of MCP servers', schema: McpServerItemSchema }],
   },
   {
     method: 'get',
-    path: '/v1/scope/{scopeId}/integration/{id}',
-    operationId: 'getIntegration',
-    summary: 'Get an integration by ID',
-    tags: ['Integrations'],
+    path: '/v1/scope/{scopeId}/mcp-server/{id}',
+    operationId: 'getMcpServer',
+    summary: 'Get an MCP server by ID',
+    tags: ['MCP Servers'],
     pathParams: [
       { name: 'scopeId', schema: scopeIdParam },
-      { name: 'id', schema: idParam, description: 'Integration ID' },
+      { name: 'id', schema: idParam, description: 'MCP server ID' },
     ],
-    responses: [{ status: 200, description: 'Integration details', schema: IntegrationItemSchema }],
+    responses: [{ status: 200, description: 'MCP server details', schema: McpServerItemSchema }],
   },
   {
     method: 'delete',
-    path: '/v1/scope/{scopeId}/integration/{id}',
-    operationId: 'deleteIntegration',
-    summary: 'Delete an integration',
-    tags: ['Integrations'],
+    path: '/v1/scope/{scopeId}/mcp-server/{id}',
+    operationId: 'deleteMcpServer',
+    summary: 'Delete an MCP server',
+    tags: ['MCP Servers'],
     pathParams: [
       { name: 'scopeId', schema: scopeIdParam },
-      { name: 'id', schema: idParam, description: 'Integration ID' },
+      { name: 'id', schema: idParam, description: 'MCP server ID' },
     ],
-    responses: [{ status: 200, description: 'Integration deleted' }],
+    responses: [{ status: 200, description: 'MCP server deleted' }],
   },
 
   // ── MCP Consent & Grants ────────────────────────────────────────────────

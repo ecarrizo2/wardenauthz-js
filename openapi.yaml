@@ -11411,15 +11411,15 @@ paths:
               example:
                 token: string
                 tool: string
-  /v1/scope/{scopeId}/integration:
+  /v1/scope/{scopeId}/mcp-server:
     post:
-      operationId: createIntegration
-      summary: Create an integration
+      operationId: createMcpServer
+      summary: Create an MCP server
       tags:
-        - Integrations
+        - MCP Servers
       responses:
         '201':
-          description: Integration created
+          description: MCP server created
           content:
             application/json:
               schema:
@@ -11562,13 +11562,13 @@ paths:
                 name: string
                 provider: string
     get:
-      operationId: listIntegrations
-      summary: List integrations in a scope
+      operationId: listMcpServers
+      summary: List MCP servers in a scope
       tags:
-        - Integrations
+        - MCP Servers
       responses:
         '200':
-          description: List of integrations
+          description: List of MCP servers
           content:
             application/json:
               schema:
@@ -11678,15 +11678,15 @@ paths:
           description: Scope ID
           schema:
             type: string
-  /v1/scope/{scopeId}/integration/{id}:
+  /v1/scope/{scopeId}/mcp-server/{id}:
     get:
-      operationId: getIntegration
-      summary: Get an integration by ID
+      operationId: getMcpServer
+      summary: Get an MCP server by ID
       tags:
-        - Integrations
+        - MCP Servers
       responses:
         '200':
-          description: Integration details
+          description: MCP server details
           content:
             application/json:
               schema:
@@ -11799,17 +11799,17 @@ paths:
         - name: id
           in: path
           required: true
-          description: Integration ID
+          description: MCP server ID
           schema:
             type: string
     delete:
-      operationId: deleteIntegration
-      summary: Delete an integration
+      operationId: deleteMcpServer
+      summary: Delete an MCP server
       tags:
-        - Integrations
+        - MCP Servers
       responses:
         '200':
-          description: Integration deleted
+          description: MCP server deleted
         '400':
           description: Validation error — malformed input or missing required field
           content:
