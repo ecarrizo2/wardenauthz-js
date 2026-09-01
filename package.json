@@ -1,6 +1,6 @@
 {
   "name": "@ecarrizo2/wardenauthz-js",
-  "version": "0.0.1",
+  "version": "0.2.1",
   "description": "TypeScript SDK for WardenAuthz managed authorization API",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
