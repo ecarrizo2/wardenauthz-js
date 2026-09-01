@@ -42,7 +42,7 @@
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^26",
     "openapi-typescript": "^7",
-    "typescript": "^5.0.0 || ^6.0.0"
+    "typescript": "^7.0.2"
   },
   "license": "MIT",
   "repository": {
