@@ -44,7 +44,7 @@
     "openapi-typescript": "^7",
     "typescript": "^5.0.0 || ^6.0.0"
   },
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ecarrizo2/wardenauthz-js.git"

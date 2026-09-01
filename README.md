@@ -591,4 +591,4 @@ Full API documentation: [https://wardenauthz.com/docs](https://wardenauthz.com/d
 
 ## License
 
-Proprietary — see the main repository [LICENSE](../../LICENSE).
+[MIT](LICENSE) — Copyright (c) 2024 Barksoft
