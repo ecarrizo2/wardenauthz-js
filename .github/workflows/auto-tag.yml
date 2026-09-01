@@ -11,18 +11,20 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
       - id: version
         run: echo "v=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
       - id: check-tag
         run: |
-          if git rev-parse "v${{ steps.version.outputs.v }}" >/dev/null 2>&1; then
+          if git tag -l "v${{ steps.version.outputs.v }}" | grep -q .; then
             echo "exists=true" >> $GITHUB_OUTPUT
           else
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - if: steps.check-tag.outputs.exists == 'false'
         uses: rickstaa/action-create-tag@v1
         with:
           tag: v${{ steps.version.outputs.v }}
+          tag_exists_error: false
