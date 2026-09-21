@@ -2,6 +2,12 @@ import { z } from 'zod'
 
 export type McpServerStatus = 'active' | 'disabled'
 
+/** Which principals may use a server's upstream credential at runtime.
+ *  - `delegated` (default): only the caller's own per-user credential; the shared admin credential is never used.
+ *  - `shared`: any caller may fall back to the scope's shared admin credential.
+ *  - `shared-restricted`: the shared credential may only be used by agents (non-OAuth principals); humans must delegate. */
+export type McpServerCredentialMode = 'shared' | 'delegated' | 'shared-restricted'
+
 /** Per-tool configuration captured when an MCP server is registered. */
 export interface McpToolConfig {
   name: string
@@ -28,6 +34,7 @@ export interface McpServerItem {
   createdAt: number
   createdBy?: string
   tools?: McpToolConfig[]
+  credentialMode?: McpServerCredentialMode
 }
 
 export const McpServerItemSchema = z.object({
@@ -40,6 +47,7 @@ export const McpServerItemSchema = z.object({
   createdAt: z.number(),
   createdBy: z.string().optional(),
   tools: z.array(McpToolConfigSchema).optional(),
+  credentialMode: z.enum(['shared', 'delegated', 'shared-restricted']).optional(),
 })
 
 export interface CreateMcpServerInput {
@@ -48,6 +56,7 @@ export interface CreateMcpServerInput {
   provider: string
   status?: McpServerStatus
   upstreamUrl?: string
+  credentialMode?: McpServerCredentialMode
   tools?: McpToolConfig[]
 }
 
@@ -65,6 +74,7 @@ export const CreateMcpServerInputSchema = z.object({
     .regex(/^[a-zA-Z0-9_-]+$/),
   status: z.enum(['active', 'disabled']).optional(),
   upstreamUrl: z.string().max(2048).optional(),
+  credentialMode: z.enum(['shared', 'delegated', 'shared-restricted']).optional(),
   tools: z.array(McpToolConfigSchema).optional(),
 })
 
@@ -76,6 +86,7 @@ export interface UpdateMcpServerInput {
   name?: string
   status?: McpServerStatus
   upstreamUrl?: string
+  credentialMode?: McpServerCredentialMode
   tools?: McpToolConfig[]
 }
 
@@ -83,5 +94,6 @@ export const UpdateMcpServerInputSchema = z.object({
   name: z.string().min(1).max(120).optional(),
   status: z.enum(['active', 'disabled']).optional(),
   upstreamUrl: z.string().max(2048).optional(),
+  credentialMode: z.enum(['shared', 'delegated', 'shared-restricted']).optional(),
   tools: z.array(McpToolConfigSchema).optional(),
 })

@@ -15,6 +15,7 @@ export interface AuditLogItem {
   ipAddress?: string
   traceId?: string
   userAgent?: string
+  sessionId?: string
 }
 
 export const AuditLogItemSchema = z.object({
@@ -32,6 +33,7 @@ export const AuditLogItemSchema = z.object({
   ipAddress: z.string().optional(),
   traceId: z.string().optional(),
   userAgent: z.string().optional(),
+  sessionId: z.string().optional(),
 })
 
 export type AuditExportFormat = 'csv' | 'json'
