@@ -7,6 +7,16 @@ export const McpTrustTierSchema = z.enum(['low', 'medium', 'high'])
 /** Who must approve a HITL tool call: the requester (`self`, audited) or an admin/operator. */
 export type HitlLevel = 'self' | 'admin'
 
+/** Who authored a request's justification: the person (`human`) or the model (`agent`, unverified). */
+export type McpJustificationSource = 'human' | 'agent'
+
+/** Optional rationale for a HITL tool call, shown next to the action so a reviewer can correlate. */
+export interface McpJustification {
+  text: string
+  source: McpJustificationSource
+  at: number
+}
+
 export interface McpConsentServer {
   serverKey: string
   name: string
@@ -66,6 +76,14 @@ export const McpConsentGrantResultSchema = z.object({
 
 export const HitlLevelSchema = z.enum(['self', 'admin'])
 
+export const McpJustificationSourceSchema = z.enum(['human', 'agent'])
+
+export const McpJustificationSchema = z.object({
+  text: z.string(),
+  source: McpJustificationSourceSchema,
+  at: z.number(),
+})
+
 export const McpApprovalSummarySchema = z.object({
   id: z.string(),
   subjectId: z.string(),
@@ -73,6 +91,7 @@ export const McpApprovalSummarySchema = z.object({
   tool: z.string(),
   level: HitlLevelSchema,
   context: z.object({ action: z.string(), targets: z.array(z.object({ label: z.string(), value: z.string() })) }).optional(),
+  justification: McpJustificationSchema.optional(),
   createdAt: z.number(),
   expiresAt: z.number().optional(),
 })
@@ -143,6 +162,8 @@ export interface McpApprovalSummary {
   tool: string
   level: HitlLevel
   context?: McpCallContext
+  /** Optional rationale for the call, shown next to the action so a reviewer can correlate intent. */
+  justification?: McpJustification
   createdAt: number
   /** Decision deadline (unix seconds) — the request auto-rejects after this. */
   expiresAt?: number
