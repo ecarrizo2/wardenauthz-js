@@ -1,8 +1,8 @@
-# WardenAuthz TypeScript SDK
+# WardenAuth TypeScript SDK
 
 [![CI](https://github.com/ecarrizo2/wardenauthz-js/actions/workflows/ci.yml/badge.svg)](https://github.com/ecarrizo2/wardenauthz-js/actions/workflows/ci.yml) [![npm](https://img.shields.io/npm/v/@ecarrizo2/wardenauthz-js)](https://www.npmjs.com/package/@ecarrizo2/wardenauthz-js) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Official TypeScript/JavaScript client for [WardenAuthz](https://wardenauthz.com) — fine-grained, multi-tenant role-based access control for serverless SaaS.
+Official TypeScript/JavaScript client for [WardenAuth](https://wardenauthz.com): authorization for your users and your AI agents. Roles, permissions and tenants through one API, with the reason behind every decision.
 
 ## Installation
 
