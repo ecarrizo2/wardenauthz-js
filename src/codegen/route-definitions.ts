@@ -1056,6 +1056,18 @@ export const routeDefinitions: RouteDefinition[] = [
     ],
     responses: [{ status: 200, description: 'Team member removed' }],
   },
+  {
+    method: 'post',
+    path: '/v1/scope/{scopeId}/team-members/{subjectId}/resend-invite',
+    operationId: 'resendTeamMemberInvite',
+    summary: 'Resend a pending invite email (at most 5 sends, 10 minutes apart)',
+    tags: ['Team Members'],
+    pathParams: [
+      { name: 'scopeId', schema: scopeIdParam },
+      { name: 'subjectId', schema: idParam, description: 'Subject ID of the pending invite' },
+    ],
+    responses: [{ status: 200, description: 'Invite email sent again', schema: TeamMemberItemSchema }],
+  },
 
   // ── Organization ─────────────────────────────────────────────────────────────
   {

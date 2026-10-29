@@ -10192,6 +10192,88 @@ paths:
           description: Subject ID
           schema:
             type: string
+  /v1/scope/{scopeId}/team-members/{subjectId}/resend-invite:
+    post:
+      operationId: resendTeamMemberInvite
+      summary: Resend a pending invite email (at most 5 sends, 10 minutes apart)
+      tags:
+        - Team Members
+      responses:
+        '200':
+          description: Invite email sent again
+        '400':
+          description: Validation error — malformed input or missing required field
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '402':
+          description: Payment required — billing tier upgrade needed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Forbidden — insufficient permissions for this resource
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Not found — the requested resource does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: Conflict — resource already exists or has conflicting state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '410':
+          description: Gone — resource was permanently removed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '422':
+          description: Unprocessable Entity — semantic validation failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '429':
+          description: Too many requests — rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      parameters:
+        - name: scopeId
+          in: path
+          required: true
+          description: Scope ID
+          schema:
+            type: string
+        - name: subjectId
+          in: path
+          required: true
+          description: Subject ID
+          schema:
+            type: string
   /v1/admin/organization:
     get:
       operationId: getOrganization

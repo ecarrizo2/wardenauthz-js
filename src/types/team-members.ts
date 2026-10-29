@@ -9,6 +9,12 @@ export interface TeamMemberItem {
   invitedBy: string
   createdAt: string
   status: 'pending' | 'active'
+  /** Pending invites: when the invite email was last sent. */
+  inviteSentAt?: string
+  /** Pending invites: how many times the invite email has been sent. */
+  inviteSendCount?: number
+  /** Pending invites: the last send failed, so the invitee never got the email. */
+  inviteEmailFailed?: boolean
 }
 
 export const TeamMemberItemSchema = z.object({
@@ -20,6 +26,9 @@ export const TeamMemberItemSchema = z.object({
   invitedBy: z.string(),
   createdAt: z.string(),
   status: z.enum(['pending', 'active']),
+  inviteSentAt: z.string().optional(),
+  inviteSendCount: z.number().int().optional(),
+  inviteEmailFailed: z.boolean().optional(),
 })
 
 export interface AddTeamMemberInput {

@@ -15,4 +15,12 @@ export class TeamMembersResource {
   async remove(scopeId: string, subjectId: string): Promise<void> {
     return this.client.delete(`/v1/scope/${scopeId}/team-members/${subjectId}`)
   }
+
+  /**
+   * Sends a pending invitation's email again (e.g. when `inviteEmailFailed` is true). Each
+   * invitation can be sent at most 5 times, 10 minutes apart; beyond that the API answers 429.
+   */
+  async resendInvite(scopeId: string, subjectId: string): Promise<TeamMemberItem> {
+    return this.client.post(`/v1/scope/${scopeId}/team-members/${subjectId}/resend-invite`, {})
+  }
 }

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `TeamMembersResource.resendInvite()` — resend a pending invitation's email (at most 5 sends, 10 minutes apart)
+- `TeamMemberItem` — `inviteSentAt`, `inviteSendCount`, `inviteEmailFailed` for pending invitations
+
+### Changed
+- Invitations are no longer accepted automatically at sign-in; the invitee accepts them in the dashboard
+- `AuditResource.export()` — the bulk export endpoint is temporarily disabled and answers `503`
+
 ## [0.2.0] - 2026-06-26
 
 ### Added
